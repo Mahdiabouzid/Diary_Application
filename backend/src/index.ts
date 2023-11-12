@@ -3,6 +3,8 @@ import { MikroORM, EntityManager, EntityRepository, RequestContext } from '@mikr
 import http from 'http';
 import { DiaryEntry, User, DiaryEntryTag } from "./entities";
 import { AuthController } from "./controller/auth.controller";
+import bodyParser from "body-parser";
+
 
 const PORT = 4000;
 const app = express();
@@ -26,7 +28,8 @@ export const initializeServer = async () => {
     DI.userRepository = DI.orm.em.getRepository(User);
 
     // global middleware
-    app.use(express.json());    // parse request to json
+    app.use(express.json());    // parse request to 
+    app.use(bodyParser.urlencoded({extended: true}));
     app.use((req,res, next) => {
         console.log(`${req.method} Request to ${req.path}`);
         next();
