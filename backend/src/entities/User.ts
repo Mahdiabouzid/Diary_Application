@@ -34,6 +34,7 @@ export class User extends BaseEntity {
   }
 }
 
+//yup validation schema
 export const RegisterUserSchema = object({
   email: string().required(),
   password: string().required(),
@@ -41,6 +42,7 @@ export const RegisterUserSchema = object({
   lastName: string().required(),
 });
 
+// new type RegisterUserDTO
 export type RegisterUserDTO = {
   email: string;
   password: string;
@@ -48,6 +50,7 @@ export type RegisterUserDTO = {
   lastName: string;
 };
 
+//yup validation schema
 export const LoginSchema = object({
   email: string().required(),
   password: string().required(),
