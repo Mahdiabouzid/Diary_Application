@@ -6,6 +6,7 @@ const router = Router();
 
 router.post("/login", async (req, res) => {
      //check if data is valid
+     console.log(req.body);
      const validateData = await LoginSchema.validate(req.body).catch((e) => {
         res.status(400).json({ errors: e.errors});
     });
@@ -13,7 +14,7 @@ router.post("/login", async (req, res) => {
     if(!validateData) {
         return;
     }
-
+    console.log(validateData);
     //check if user exists in databse
     const user = await DI.userRepository.findOne({email: validateData.email});
 
