@@ -3,6 +3,8 @@ import { Router } from "express";
 const router = Router();
 
 router.get("/", (req, res) => {
+    console.log("user: ", req.user);
+    console.log("token: ", req.token);
     res.send('GET from controller');
 });
 

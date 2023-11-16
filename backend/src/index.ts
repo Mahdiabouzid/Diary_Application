@@ -3,6 +3,8 @@ import { MikroORM, EntityManager, EntityRepository, RequestContext } from '@mikr
 import http from 'http';
 import { DiaryEntry, User, DiaryEntryTag } from "./entities";
 import { AuthController } from "./controller/auth.controller";
+import { authMiddleware, verifyAcess } from "./middlewares/authontication.middleware";
+import { DiaryController } from "./controller/diaryEntry.controller";
 
 const PORT = 4000;
 const app = express();
@@ -37,7 +39,8 @@ export const initializeServer = async () => {
     
     //routes  
     app.use("/auth", AuthController);
-
+    app.use(authMiddleware);
+    app.use("/diaryentires", verifyAcess, DiaryController);
     // starting the app from the DI
     DI.server = app.listen(PORT, () => {
         console.log(`server started on localhost: http://localhost:${PORT}`);

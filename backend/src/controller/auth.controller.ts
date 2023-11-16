@@ -6,7 +6,6 @@ const router = Router();
 
 router.post("/login", async (req, res) => {
      //check if data is valid
-     console.log(req.body);
      const validateData = await LoginSchema.validate(req.body).catch((e) => {
         res.status(400).json({ errors: e.errors});
     });
@@ -14,7 +13,6 @@ router.post("/login", async (req, res) => {
     if(!validateData) {
         return;
     }
-    console.log(validateData);
     //check if user exists in databse
     const user = await DI.userRepository.findOne({email: validateData.email});
 
@@ -22,7 +20,8 @@ router.post("/login", async (req, res) => {
         return res.status(400).json({errors: ['user does not exsist']});
     }
 
-    if(!Auth.comparePasswordWithHash(validateData.password, user.password)) {
+    const matchingPassword = await Auth.comparePasswordWithHash(validateData.password, user.password);
+    if(!matchingPassword) {
         return res.status(401).json({errors: ['password does not match']});
         }
     
@@ -57,8 +56,10 @@ router.post("/register", async (req, res) => {
     }
 
     //create new User
-    const registerData: RegisterUserDTO = validateData;
-    registerData.password = await Auth.hashPassword(registerData.password);
+    const registerData: RegisterUserDTO = {
+        ...validateData,
+        password: await Auth.hashPassword(validateData.password),
+      };
     const newUser = new User(registerData);
 
     //persist to databse
