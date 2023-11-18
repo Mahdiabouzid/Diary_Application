@@ -40,7 +40,7 @@ export const initializeServer = async () => {
     //routes  
     app.use("/auth", AuthController);
     app.use(authMiddleware);
-    app.use("/diaryentires", verifyAcess, DiaryController);
+    app.use("/diaryEntires", verifyAcess, DiaryController);
     // starting the app from the DI
     DI.server = app.listen(PORT, () => {
         console.log(`server started on localhost: http://localhost:${PORT}`);
