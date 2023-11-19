@@ -86,7 +86,7 @@ router.put("/:id", async (req, res) => {
         wrap(diaryEntry).assign(req.body);
         await DI.diaryEntryRepository.flush();
     
-        res.json(diaryEntry);
+        return res.status(201).json(diaryEntry);
       } catch (e: any) {
         return res.status(400).send({ errors: [e.message] });
       }
