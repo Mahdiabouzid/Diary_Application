@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { DI } from "..";
-import { CreateDiaryEntryDTO, CreateDiaryEntrySchema, DiaryEntry } from "../entities";
+import { CreateDiaryEntryDTO, CreateDiaryEntryDTOTag, CreateDiaryEntrySchema, DiaryEntry } from "../entities";
+import { wrap } from "@mikro-orm/core";
 
 const router = Router();
 
@@ -26,8 +27,37 @@ router.post("/", async (req, res) => {
         creator: req.user!
     };
     const diaryEntry = new DiaryEntry(createDiaryEntryDTO);
-    //persist
-    await DI.diaryEntryRepository.persistAndFlush(diaryEntry);
+
+    //if entry has tags in it
+    if (createDiaryEntryDTO.tags) {
+        const {tagIds, tagsWithName} = createDiaryEntryDTO.tags.reduce<{
+            tagIds: string[]; tagsWithName: CreateDiaryEntryDTOTag[];}>(
+            (prev: {tagIds: string[]; tagsWithName: CreateDiaryEntryDTOTag[]}, curTag: CreateDiaryEntryDTOTag) => {
+            // case 1: tags have ids
+            if (curTag.id) {
+            prev.tagIds.push(curTag.id);    
+            return prev;        
+            }
+            //case 2: tags have a name
+            if (curTag.name) {
+                prev.tagsWithName.push(curTag);
+                return prev;
+            }
+            return prev;
+        }, {tagIds: [], tagsWithName: [],
+        });
+
+        const loadedTags = await DI.diaryEntryTagRepository.find({id: {$in: tagIds}});
+        const mergedTags = [...loadedTags, ...tagsWithName];
+        wrap(diaryEntry).assign({ tags: mergedTags }, { em: DI.em });
+
+        //persist
+        await DI.diaryEntryRepository.persistAndFlush(diaryEntry);
+        await DI.diaryEntryRepository.populate(diaryEntry, ['tags']);
+    }
+    else {
+        await DI.diaryEntryRepository.persistAndFlush(diaryEntry);
+      }
     //return resposne
     return res.status(201).json(diaryEntry);
 });
@@ -35,15 +65,31 @@ router.post("/", async (req, res) => {
 router.delete("/:id", async (req, res) => {
     const existingEntry = await DI.diaryEntryRepository.find({id: req.params.id, creator: req.user});
     if (!existingEntry) {
-    res.status(403).json({errors: ['you cant delete this id']});
+     return res.status(403).json({ errors: ['you cant delete this id'] });
     }
-
-    await DI.diaryEntryRepository.remove(existingEntry);
+    
+    await DI.diaryEntryRepository.remove(existingEntry).flush();
     return res.status(204);
 });
 
-router.put("/", (req, res) => {
-    res.send('hello from controller');
+router.put("/:id", async (req, res) => {
+    try {
+        //load entry and populate with tags
+        const diaryEntry = await DI.diaryEntryRepository.findOne(req.params.id, {
+          populate: ['tags'],
+        });
+    
+        if (!diaryEntry) {
+          return res.status(404).send({ message: 'DiaryEntry not found' });
+        }
+        //update entry
+        wrap(diaryEntry).assign(req.body);
+        await DI.diaryEntryRepository.flush();
+    
+        res.json(diaryEntry);
+      } catch (e: any) {
+        return res.status(400).send({ errors: [e.message] });
+      }
 });
 
 export const DiaryController = router;

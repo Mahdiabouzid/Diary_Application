@@ -43,6 +43,8 @@ export const CreateDiaryEntrySchema = object({
   name?: string;
   creator?: User;
 };
+  partial: make all keys optional
+  pick: pick from DiaryEntryTag values id or name or creator
  */
 export type CreateDiaryEntryDTOTag = Partial<Pick<DiaryEntryTag, 'id' | 'name' | 'creator'>>;
 export type CreateDiaryEntryDTO = {
