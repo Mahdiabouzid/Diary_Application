@@ -7,7 +7,7 @@ const router = Router();
 
 router.get("/", async (req, res) => {
     // populate: to send user data with the entry
-    const diaryentires = await DI.diaryEntryRepository.find({creator: req.user}, {populate: ["creator"]});
+    const diaryentires = await DI.diaryEntryRepository.find({creator: req.user}, {populate: ["creator", "tags"]});
     return res.status(200).json(diaryentires);
 });
 
@@ -30,23 +30,25 @@ router.post("/", async (req, res) => {
 
     //if entry has tags in it
     if (createDiaryEntryDTO.tags) {
+        //iterate over the tags and categorize them
         const {tagIds, tagsWithName} = createDiaryEntryDTO.tags.reduce<{
             tagIds: string[]; tagsWithName: CreateDiaryEntryDTOTag[];}>(
             (prev: {tagIds: string[]; tagsWithName: CreateDiaryEntryDTOTag[]}, curTag: CreateDiaryEntryDTOTag) => {
-            // case 1: tags have ids
             if (curTag.id) {
             prev.tagIds.push(curTag.id);    
             return prev;        
             }
-            //case 2: tags have a name
+            //
             if (curTag.name) {
+                curTag = {...curTag, creator: req.user!};
                 prev.tagsWithName.push(curTag);
                 return prev;
             }
             return prev;
         }, {tagIds: [], tagsWithName: [],
         });
-
+        
+        // fetch existing tags with their ids
         const loadedTags = await DI.diaryEntryTagRepository.find({id: {$in: tagIds}});
         const mergedTags = [...loadedTags, ...tagsWithName];
         wrap(diaryEntry).assign({ tags: mergedTags }, { em: DI.em });

@@ -41,7 +41,7 @@ export const initializeServer = async () => {
     //routes  
     app.use("/auth", AuthController);
     app.use(authMiddleware);
-    app.use("/diaryEntires", verifyAcess, DiaryController);
+    app.use("/diaryEntries", verifyAcess, DiaryController);
     app.use('/tags', verifyAcess, TagController);
 
     // starting the app from the DI
