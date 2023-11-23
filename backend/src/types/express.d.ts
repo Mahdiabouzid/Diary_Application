@@ -1,5 +1,5 @@
-import { User } from "../src/entities";
-import { JwtToken } from "../src/middlewares/authontication.middleware";
+import { User } from "../entities";
+import { JwtToken } from "../middlewares/authontication.middleware";
 
 /**
  * extend the express Request interface to have token and use properties
