@@ -8,7 +8,7 @@ import bodyParser from "body-parser";
 
 const PORT = 4000;
 const app = express();
-
+const cors = require('cors');
 //Setting MikroOrm via Dependency Injection
 export const DI = {} as {
     server: http.Server;
@@ -30,6 +30,7 @@ export const initializeServer = async () => {
     // global middleware
     app.use(express.json());    // parse request to 
     app.use(bodyParser.urlencoded({extended: true}));
+    app.use(cors());
     app.use((req,res, next) => {
         console.log(`${req.method} Request to ${req.path}`);
         next();
